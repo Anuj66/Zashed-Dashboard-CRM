@@ -1,8 +1,8 @@
 const express = require("express");
-const helloWorldRoutes = require("./helloWorld");
+const UserRoutes = require("./user");
 
 const router = new express.Router();
 
-router.use("/helloWorld", helloWorldRoutes);
+router.use("/user", UserRoutes);
 
 module.exports = router;
