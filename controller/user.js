@@ -8,6 +8,9 @@ const { userHasRole } = require("../helper/userHasRole");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const DB = require("../models");
+const generateOtp = require("../helper/generateOtp");
+const send = require("../helper/sendMail");
+const sendMail = require("../helper/sendMail");
 const UserModel = DB.User;
 const UserRoleModel = DB.UserRole;
 
@@ -34,7 +37,9 @@ const createUser = async (req, res) => {
       role_id: CLIENT_ROLE_ID,
     });
 
-    return res.status(201).json("User Created Successfully", newUser, 201);
+    return res
+      .status(201)
+      .json(success("User Created Successfully", newUser, 201));
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
@@ -67,7 +72,19 @@ const login = async (req, res) => {
   }
 };
 
+const generateOtpForPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const otp = generateOtp(6);
+    await sendMail(email, "OTP", "OTP is " + otp);
+    return res.status(200).json(success("OK", otp, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   createUser,
   login,
+  generateOtpForPasswordReset,
 };

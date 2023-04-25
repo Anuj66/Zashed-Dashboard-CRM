@@ -70,4 +70,12 @@ const login = [
     .withMessage("Please enter a valid password"),
 ];
 
-module.exports = { createUser, login };
+const generateOtpForPasswordReset = [
+  body("email")
+    .notEmpty()
+    .withMessage("Please enter an email address")
+    .isEmail()
+    .withMessage("Please enter a valid email"),
+];
+
+module.exports = { createUser, login, generateOtpForPasswordReset };
