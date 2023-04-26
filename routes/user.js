@@ -6,6 +6,7 @@ const {
   createUser,
   login,
   generateOtpForPasswordReset,
+  resetPassword,
 } = require("../validators/user");
 
 const router = new express.Router();
@@ -16,12 +17,16 @@ router.post(
   validate(createUser),
   UserController.createUser
 );
-
 router.post("/login", validate(login), UserController.login);
 router.post(
   "/generateOtp",
   validate(generateOtpForPasswordReset),
   UserController.generateOtpForPasswordReset
+);
+router.post(
+  "/resetPassword",
+  validate(resetPassword),
+  UserController.resetPassword
 );
 
 module.exports = router;

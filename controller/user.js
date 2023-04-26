@@ -77,7 +77,59 @@ const generateOtpForPasswordReset = async (req, res) => {
     const { email } = req.body;
     const otp = generateOtp(6);
     await sendMail(email, "OTP", "OTP is " + otp);
+    await UserModel.update(
+      {
+        otp,
+      },
+      {
+        where: {
+          email,
+        },
+      }
+    );
     return res.status(200).json(success("OK", otp, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { newPassword, confirmPassword, otp, email } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json(error("Confirm Password don't match", 400));
+    }
+
+    const user = await UserModel.findOne({
+      where: {
+        email,
+      },
+    });
+
+    console.log(user?.otp, otp);
+
+    if (user?.otp != otp) {
+      return res.status(400).json(error("Invalid OTP entered", 400));
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await UserModel.update(
+      {
+        password: hashedPassword,
+      },
+      {
+        where: {
+          email,
+        },
+      }
+    );
+
+    return res
+      .status(200)
+      .json(success("Updated", "User password updated", 200));
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
@@ -87,4 +139,5 @@ module.exports = {
   createUser,
   login,
   generateOtpForPasswordReset,
+  resetPassword,
 };

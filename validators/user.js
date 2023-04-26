@@ -75,7 +75,55 @@ const generateOtpForPasswordReset = [
     .notEmpty()
     .withMessage("Please enter an email address")
     .isEmail()
-    .withMessage("Please enter a valid email"),
+    .withMessage("Please enter a valid email")
+    .custom((value) => {
+      return UserModel.findOne({
+        where: {
+          email: value,
+        },
+      }).then((user) => {
+        if (!user) {
+          return Promise.reject("User with this email does not exists!");
+        }
+        return true;
+      });
+    }),
 ];
 
-module.exports = { createUser, login, generateOtpForPasswordReset };
+const resetPassword = [
+  body("email")
+    .notEmpty()
+    .withMessage("Please enter an email address")
+    .isEmail()
+    .withMessage("Please enter a valid email")
+    .custom((value) => {
+      return UserModel.findOne({
+        where: {
+          email: value,
+        },
+      }).then((user) => {
+        if (!user) {
+          return Promise.reject("User with this email does not exists!");
+        }
+        return true;
+      });
+    }),
+  body("otp").notEmpty().withMessage("Please enter otp"),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("Please enter new password")
+    .isString()
+    .withMessage("Please enter a valid new password"),
+  body("confirmPassword")
+    .notEmpty()
+    .withMessage("Please enter confirm password")
+    .isString()
+    .withMessage("Please enter a valid confirm password"),
+];
+
+module.exports = {
+  createUser,
+  login,
+  generateOtpForPasswordReset,
+  resetPassword,
+};
