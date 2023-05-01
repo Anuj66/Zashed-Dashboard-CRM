@@ -9,10 +9,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const DB = require("../models");
 const generateOtp = require("../helper/generateOtp");
-const send = require("../helper/sendMail");
 const sendMail = require("../helper/sendMail");
 const UserModel = DB.User;
 const UserRoleModel = DB.UserRole;
+const RoleModel = DB.Role;
 
 const createUser = async (req, res) => {
   try {
@@ -26,7 +26,7 @@ const createUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const securedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await UserModel.create({
+    let newUser = await UserModel.create({
       username,
       password: securedPassword,
       email,
@@ -37,9 +37,23 @@ const createUser = async (req, res) => {
       role_id: CLIENT_ROLE_ID,
     });
 
+    newUser = await UserModel.findOne({
+      where: {
+        username,
+      },
+      include: {
+        model: UserRoleModel,
+        attributes: ["role_id"],
+        include: {
+          model: RoleModel,
+          attributes: ["name"],
+        },
+      },
+    });
+
     return res
       .status(201)
-      .json(success("User Created Successfully", newUser, 201));
+      .json(success("User Created Successfully", newUser.dataValues, 201));
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
@@ -53,6 +67,16 @@ const login = async (req, res) => {
       where: {
         username,
       },
+      include: [
+        {
+          model: UserRoleModel,
+          attributes: ["role_id"],
+          include: {
+            model: RoleModel,
+            attributes: ["name"],
+          },
+        },
+      ],
     });
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -61,6 +85,7 @@ const login = async (req, res) => {
 
     const payload = { user };
     const jwt_token = await jwt.sign(payload, JWT_KEY);
+
     user = {
       ...user.dataValues,
       token: jwt_token,
