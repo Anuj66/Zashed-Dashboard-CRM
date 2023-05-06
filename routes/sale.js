@@ -12,5 +12,11 @@ router.post(
   validate(totalRevenue),
   SalesController.totalRevenue
 );
+router.post(
+  "/totalCommission",
+  authenticate,
+  validate(totalRevenue),
+  SalesController.totalCommission
+);
 
 module.exports = router;

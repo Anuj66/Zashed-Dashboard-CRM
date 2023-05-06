@@ -34,7 +34,7 @@ const totalRevenue = async (req, res) => {
       include: [
         {
           model: BrandModel,
-          attributes: ["name"],
+          attributes: ["name", "id"],
         },
       ],
     });
@@ -51,7 +51,7 @@ const totalRevenue = async (req, res) => {
       ],
       include: {
         model: BrandModel,
-        attributes: ["name"],
+        attributes: ["name", "id"],
       },
     });
 
@@ -59,6 +59,10 @@ const totalRevenue = async (req, res) => {
     let brandDetails = [];
     for (let salesData of totalSalesByBrand) {
       let data = {};
+      data.totalSales = 0;
+      data.totalReturn = 0;
+      data.totalRevenue = 0;
+      data.brand = salesData.Brand;
       let salesResult = 0;
       Object.keys(salesData.dataValues).forEach(function (key) {
         if (key == "result") salesResult = salesData.dataValues[key];
@@ -87,6 +91,69 @@ const totalRevenue = async (req, res) => {
   }
 };
 
+const totalCommission = async (req, res) => {
+  try {
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    if (!isAdmin) {
+      return res.status(403).json(error("User not authorized", 403));
+    }
+
+    const { brand_id, year } = req.body;
+
+    let filter = {};
+    if (year != null && year != "") {
+      filter.year = year;
+    }
+    if (brand_id != null && brand_id != "") {
+      filter.brand_id = brand_id;
+    }
+
+    filter.status = "Sales";
+
+    const totalCommissionByBrands = await SalesModel.findAll({
+      where: filter,
+      attributes: [
+        [Sequelize.literal("SUM(zashed_margin)"), "totalCommission"],
+      ],
+      group: ["brand_id"],
+      include: {
+        model: BrandModel,
+        attributes: ["name", "id"],
+      },
+    });
+
+    let totalCommission = 0;
+    const brandDetails = [];
+    for (let data of totalCommissionByBrands) {
+      let commissionDetails = 0;
+
+      Object.keys(data.dataValues).forEach(function (key) {
+        console.log(key, data.dataValues[key]);
+        if (key == "totalCommission") commissionDetails = data.dataValues[key];
+      });
+      totalCommission += parseFloat(commissionDetails);
+      brandDetails.push({
+        totalCommission: parseFloat(commissionDetails).toFixed(2),
+        brand: data.Brand,
+      });
+    }
+
+    return res.status(200).json(
+      success(
+        "OK",
+        {
+          brandDetails,
+          totalCommission: parseFloat(totalCommission).toFixed(2),
+        },
+        200
+      )
+    );
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   totalRevenue,
+  totalCommission,
 };

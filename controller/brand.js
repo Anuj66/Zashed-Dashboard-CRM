@@ -125,13 +125,13 @@ const getSalesData = (key, val) => {
     return { key: "sale_qty", value: parseInt(val) };
   }
   if (key == "R") {
-    return { key: "tax", value: Math.round(parseFloat(val) * 100) };
+    return { key: "tax", value: parseFloat(val).toFixed(2) };
   }
   if (key == "S") {
-    return { key: "sales_tax", value: Math.round(parseFloat(val) * 100) };
+    return { key: "sales_tax", value: parseFloat(val).toFixed(2) };
   }
   if (key == "T") {
-    return { key: "zashed_margin", value: (parseFloat(val) * 100).toFixed(2) };
+    return { key: "zashed_margin", value: parseFloat(val).toFixed(2) };
   }
 };
 
