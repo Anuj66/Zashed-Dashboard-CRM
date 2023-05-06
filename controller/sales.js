@@ -13,7 +13,7 @@ const totalRevenue = async (req, res) => {
       return res.status(403).json(error("User not authorized", 403));
     }
 
-    const { brand_id, year } = req.body;
+    const { brand_id, year, month } = req.body;
 
     let filter = {};
     if (year != null && year != "") {
@@ -21,6 +21,9 @@ const totalRevenue = async (req, res) => {
     }
     if (brand_id != null && brand_id != "") {
       filter.brand_id = brand_id;
+    }
+    if (month != null && month != "") {
+      filter.month = month;
     }
 
     filter.status = "Sales";
@@ -83,6 +86,12 @@ const totalRevenue = async (req, res) => {
       brandDetails.push(data);
     }
 
+    for (let data of brandDetails) {
+      data.revenueComposition = parseInt(
+        (data.totalRevenue * 100) / totalRevenue
+      );
+    }
+
     return res
       .status(200)
       .json(success("OK", { brandDetails, totalRevenue }, 200));
@@ -136,6 +145,12 @@ const totalCommission = async (req, res) => {
         totalCommission: parseFloat(commissionDetails).toFixed(2),
         brand: data.Brand,
       });
+    }
+
+    for (let data of brandDetails) {
+      data.commissionComposition = parseInt(
+        (data.totalCommission * 100) / totalCommission
+      );
     }
 
     return res.status(200).json(

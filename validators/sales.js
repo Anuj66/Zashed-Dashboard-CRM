@@ -7,6 +7,10 @@ const totalRevenue = [
     .optional()
     .isNumeric()
     .withMessage("Please provide a valid number"),
+  body("month")
+    .optional()
+    .isNumeric()
+    .withMessage("Please provide a valid number"),
   body("brand_id")
     .optional()
     .custom((value) => {
