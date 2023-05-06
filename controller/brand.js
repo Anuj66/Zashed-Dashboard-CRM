@@ -44,6 +44,15 @@ const createBrand = async (req, res) => {
   }
 };
 
+const listBrands = async (req, res) => {
+  try {
+    const brandDetails = await BrandModel.findAll();
+    return res.status(200).json(success("OK", brandDetails, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 const jsonToDbData = (data, brand_id) => {
   const result = [];
   for (let row of data) {
@@ -128,4 +137,5 @@ const getSalesData = (key, val) => {
 
 module.exports = {
   createBrand,
+  listBrands,
 };

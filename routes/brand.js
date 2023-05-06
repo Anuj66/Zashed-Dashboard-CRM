@@ -14,5 +14,6 @@ router.post(
   validate(createBrand),
   BrandController.createBrand
 );
+router.get("/listBrands", authenticate, BrandController.listBrands);
 
 module.exports = router;
