@@ -26,19 +26,37 @@ const createBrand = async (req, res) => {
       brand_id: newBrand.id,
     });
 
-    const result = readExcelFile(req.file);
-    const data = result["Data"];
-    data.shift();
-
-    const output = jsonToDbData(data, newBrand.id);
-    const savedSalesData = await SalesModel.bulkCreate(output);
+    const savedSalesData = await pushExcelDataToDb(req.file, newBrand.id);
 
     const response = {
       brand: newBrand,
       savedSalesData,
     };
 
-    return res.status(200).json(success("OK", response, 200));
+    return res.status(200).json(success("CREATED", response, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
+const updateBrandSales = async (req, res) => {
+  try {
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    if (!isAdmin) {
+      return res.status(403).json(error("User not authorized", 403));
+    }
+
+    const { brand_id } = req.body;
+    const deletedSales = await SalesModel.destroy({
+      where: {
+        brand_id,
+      },
+    });
+    console.log(deletedSales);
+
+    const savedSalesData = await pushExcelDataToDb(req.file, brand_id);
+
+    return res.status(201).json(success("UPDATED", savedSalesData, 201));
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
@@ -51,6 +69,15 @@ const listBrands = async (req, res) => {
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
+};
+
+const pushExcelDataToDb = async (file, brand_id) => {
+  const result = readExcelFile(file);
+  const data = result["Data"];
+  data.shift();
+
+  const output = jsonToDbData(data, brand_id);
+  return await SalesModel.bulkCreate(output);
 };
 
 const jsonToDbData = (data, brand_id) => {
@@ -138,4 +165,5 @@ const getSalesData = (key, val) => {
 module.exports = {
   createBrand,
   listBrands,
+  updateBrandSales,
 };
