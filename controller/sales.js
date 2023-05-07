@@ -5,12 +5,18 @@ const { userHasRole } = require("../helper/userHasRole");
 const DB = require("../models");
 const SalesModel = DB.Sale;
 const BrandModel = DB.Brand;
+const UserBrandModel = DB.UserBrand;
 
 const totalRevenue = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    let userBrandDetails = [];
     if (!isAdmin) {
-      return res.status(403).json(error("User not authorized", 403));
+      userBrandDetails = await UserBrandModel.findAll({
+        where: {
+          user_id: req.user.id,
+        },
+      });
     }
 
     const { brand_id, year, month } = req.body;
@@ -20,9 +26,24 @@ const totalRevenue = async (req, res) => {
     if (year != null && year != "") {
       filter.year = year;
     }
-    if (brand_id != null && brand_id != "") {
-      filter.brand_id = brand_id;
-      brandFilter.id = brand_id;
+    if (brand_id != null && brand_id != "" && isAdmin) {
+      filter.brand_id = {
+        [Op.in]: brand_id,
+      };
+      brandFilter.id = {
+        [Op.in]: brand_id,
+      };
+    } else {
+      const brandIds = [];
+      for (let data of userBrandDetails) {
+        brandIds.push(data.brand_id);
+      }
+      filter.brand_id = {
+        [Op.in]: brandIds,
+      };
+      brandFilter.id = {
+        [Op.in]: brandIds,
+      };
     }
     if (month != null && month != "") {
       filter.month = month;
@@ -201,8 +222,18 @@ const totalCommission = async (req, res) => {
 const monthyRevenue = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    let userBrandDetails = [];
+    let brandIds = [];
+
     if (!isAdmin) {
-      return res.status(403).json(error("User not authorized", 403));
+      userBrandDetails = await UserBrandModel.findAll({
+        where: {
+          user_id: req.user.id,
+        },
+      });
+      for (let data of userBrandDetails) {
+        brandIds.push(data.brand_id);
+      }
     }
 
     const { year } = req.body;
@@ -213,6 +244,11 @@ const monthyRevenue = async (req, res) => {
 
     if (year != null && year != "") {
       filter.year = year;
+    }
+    if (!isAdmin) {
+      filter.brand_id = {
+        [Op.in]: brandIds,
+      };
     }
 
     const monthlyRevenueSalesData = await SalesModel.findAll({
@@ -266,7 +302,13 @@ const monthyRevenue = async (req, res) => {
       result[key] = resMonthlyData;
     });
 
-    const brandList = await BrandModel.findAll();
+    const brandFilter = {};
+    if (!isAdmin) {
+      brandFilter.id = {
+        [Op.in]: brandIds,
+      };
+    }
+    const brandList = await BrandModel.findAll({ where: brandFilter });
     const brandListObj = {};
     for (let brand of brandList) {
       const monthListObj = {};
@@ -296,8 +338,13 @@ const monthyRevenue = async (req, res) => {
 const salesQuantityByBrand = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    let userBrandDetails = [];
     if (!isAdmin) {
-      return res.status(403).json(error("User not authorized", 403));
+      userBrandDetails = await UserBrandModel.findAll({
+        where: {
+          user_id: req.user.id,
+        },
+      });
     }
 
     const filter = {};
@@ -306,9 +353,22 @@ const salesQuantityByBrand = async (req, res) => {
 
     if (year != null && year != "") filter.year = year;
     if (month != null && month != "") filter.month = month;
-    if (brand_id != null && brand_id != "") {
-      filter.brand_id = brand_id;
-      brandFilter.id = brand_id;
+    if (brand_id != null && brand_id != "" && isAdmin) {
+      filter.brand_id = {
+        [Op.in]: brand_id,
+      };
+      brandFilter.id = {
+        [Op.in]: brand_id,
+      };
+    } else {
+      const brandIds = [];
+      for (let data of userBrandDetails) brandIds.push(data.brand_id);
+      filter.brand_id = {
+        [Op.in]: brandIds,
+      };
+      brandFilter.id = {
+        [Op.in]: brandIds,
+      };
     }
 
     const brandList = await BrandModel.findAll({ where: brandFilter });
