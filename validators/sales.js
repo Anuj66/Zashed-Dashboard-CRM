@@ -3,14 +3,8 @@ const DB = require("../models");
 const BrandModel = DB.Brand;
 
 const totalRevenue = [
-  body("year")
-    .optional()
-    .isNumeric()
-    .withMessage("Please provide a valid number"),
-  body("month")
-    .optional()
-    .isNumeric()
-    .withMessage("Please provide a valid number"),
+  body("year").optional(),
+  body("month").optional(),
   body("brand_id")
     .optional()
     .custom((value) => {

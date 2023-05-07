@@ -18,5 +18,17 @@ router.post(
   validate(totalRevenue),
   SalesController.totalCommission
 );
+router.post(
+  "/monthlyRevenue",
+  authenticate,
+  validate(totalRevenue),
+  SalesController.monthyRevenue
+);
+router.post(
+  "/saleQty",
+  authenticate,
+  validate(totalRevenue),
+  SalesController.salesQuantityByBrand
+);
 
 module.exports = router;
