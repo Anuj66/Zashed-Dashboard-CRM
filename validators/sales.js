@@ -1,24 +1,15 @@
 const { body, param } = require("express-validator");
 const DB = require("../models");
+const { Op } = require("sequelize");
 const BrandModel = DB.Brand;
 
 const totalRevenue = [
   body("year").optional(),
   body("month").optional(),
-  body("brand_id")
+  body("brand_ids")
     .optional()
-    .custom((value) => {
-      return BrandModel.findOne({
-        where: {
-          id: value,
-        },
-      }).then((brand) => {
-        if (!brand) {
-          return Promise.reject("Brand with this id does not exists!");
-        }
-        return true;
-      });
-    }),
+    .isArray()
+    .withMessage("Please provide an array of brand ids"),
 ];
 
 module.exports = {

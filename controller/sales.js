@@ -11,30 +11,28 @@ const totalRevenue = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
     let userBrandDetails = [];
+    let brandFilter = {};
+    let filter = {};
+    const { brand_ids, year, month } = req.body;
+
     if (!isAdmin) {
       userBrandDetails = await UserBrandModel.findAll({
         where: {
           user_id: req.user.id,
         },
       });
-    }
+      let brandIds = [];
 
-    const { brand_id, year, month } = req.body;
+      if (brand_ids != null && brand_ids.length > 0)
+        for (let data of userBrandDetails) {
+          if (!brand_ids.includes(data.brand_id))
+            return res
+              .status(403)
+              .json(
+                error("User is not authorized to access others brand", 403)
+              );
+        }
 
-    let filter = {};
-    let brandFilter = {};
-    if (year != null && year != "") {
-      filter.year = year;
-    }
-    if (brand_id != null && brand_id != "" && isAdmin) {
-      filter.brand_id = {
-        [Op.in]: brand_id,
-      };
-      brandFilter.id = {
-        [Op.in]: brand_id,
-      };
-    } else {
-      const brandIds = [];
       for (let data of userBrandDetails) {
         brandIds.push(data.brand_id);
       }
@@ -43,6 +41,18 @@ const totalRevenue = async (req, res) => {
       };
       brandFilter.id = {
         [Op.in]: brandIds,
+      };
+    }
+
+    if (year != null && year != "") {
+      filter.year = year;
+    }
+    if (brand_ids != null && brand_ids != "") {
+      filter.brand_id = {
+        [Op.in]: brand_ids,
+      };
+      brandFilter.id = {
+        [Op.in]: brand_ids,
       };
     }
     if (month != null && month != "") {
@@ -225,6 +235,8 @@ const monthyRevenue = async (req, res) => {
     let userBrandDetails = [];
     let brandIds = [];
 
+    const { year } = req.body;
+
     if (!isAdmin) {
       userBrandDetails = await UserBrandModel.findAll({
         where: {
@@ -235,8 +247,6 @@ const monthyRevenue = async (req, res) => {
         brandIds.push(data.brand_id);
       }
     }
-
-    const { year } = req.body;
 
     let filter = {
       year: new Date().getFullYear(),
@@ -339,35 +349,47 @@ const salesQuantityByBrand = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
     let userBrandDetails = [];
+    const filter = {};
+    const brandFilter = {};
+    const { year, month, brand_ids } = req.body;
     if (!isAdmin) {
       userBrandDetails = await UserBrandModel.findAll({
         where: {
           user_id: req.user.id,
         },
       });
-    }
 
-    const filter = {};
-    const brandFilter = {};
-    const { year, month, brand_id } = req.body;
+      let brandIds = [];
+
+      if (brand_ids != null && brand_ids.length > 0)
+        for (let data of userBrandDetails) {
+          if (!brand_ids.includes(data.brand_id))
+            return res
+              .status(403)
+              .json(
+                error("User is not authorized to access others brand", 403)
+              );
+        }
+
+      for (let data of userBrandDetails) {
+        brandIds.push(data.brand_id);
+      }
+      filter.brand_id = {
+        [Op.in]: brandIds,
+      };
+      brandFilter.id = {
+        [Op.in]: brandIds,
+      };
+    }
 
     if (year != null && year != "") filter.year = year;
     if (month != null && month != "") filter.month = month;
-    if (brand_id != null && brand_id != "" && isAdmin) {
+    if (brand_ids != null && brand_ids.length > 0) {
       filter.brand_id = {
-        [Op.in]: brand_id,
+        [Op.in]: brand_ids,
       };
       brandFilter.id = {
-        [Op.in]: brand_id,
-      };
-    } else {
-      const brandIds = [];
-      for (let data of userBrandDetails) brandIds.push(data.brand_id);
-      filter.brand_id = {
-        [Op.in]: brandIds,
-      };
-      brandFilter.id = {
-        [Op.in]: brandIds,
+        [Op.in]: brand_ids,
       };
     }
 
