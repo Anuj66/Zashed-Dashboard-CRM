@@ -28,5 +28,6 @@ router.post(
   validate(resetPassword),
   UserController.resetPassword
 );
+router.get("/getClients", authenticate, UserController.listUser);
 
 module.exports = router;

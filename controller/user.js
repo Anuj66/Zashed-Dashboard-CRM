@@ -160,9 +160,33 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const listUser = async (req, res) => {
+  try {
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    if (!isAdmin) {
+      return res.status(403).json(error("User is not authorized", 403));
+    }
+
+    const listClients = await UserRoleModel.findAll({
+      where: {
+        role_id: CLIENT_ROLE_ID,
+      },
+      include: {
+        model: UserModel,
+        attributes: ["id", "username", "email"],
+      },
+    });
+
+    return res.status(200).json(success("OK", listClients, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   createUser,
   login,
   generateOtpForPasswordReset,
   resetPassword,
+  listUser,
 };
