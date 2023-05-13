@@ -1,5 +1,6 @@
 const { body, param } = require("express-validator");
 const DB = require("../models");
+const moment = require("moment/moment");
 const UserModel = DB.User;
 const BrandModel = DB.Brand;
 
@@ -64,4 +65,37 @@ const updateBrandSales = [
     }),
 ];
 
-module.exports = { createBrand, updateBrandSales };
+const brandData = [
+  body("brand_ids")
+    .optional()
+    .isArray()
+    .withMessage("Please provide brand ids in an array")
+    .custom(async (value) => {
+      for (let brandId of value) {
+        const brand = await BrandModel.findOne({
+          where: {
+            id: brandId,
+          },
+        });
+        if (!brand)
+          throw new Error("Brand Id: " + brandId + " , does not exists");
+      }
+      return true;
+    }),
+  body("start_date")
+    .optional()
+    .isDate()
+    .withMessage("Please enter a valid date"),
+  body("end_date")
+    .optional()
+    .isDate()
+    .withMessage("Please enter a valid date")
+    .custom((value, { req }) => {
+      if (moment(req.body.start_date).isAfter(value)) {
+        throw new Error("Please enter end date greater than start date");
+      }
+      return true;
+    }),
+];
+
+module.exports = { createBrand, updateBrandSales, brandData };

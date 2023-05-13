@@ -2,7 +2,11 @@ const express = require("express");
 const BrandController = require("../controller/brand");
 const { uploadExcel } = require("../middleware/uploadFile");
 const { validate } = require("../middleware/validate");
-const { createBrand, updateBrandSales } = require("../validators/brand");
+const {
+  createBrand,
+  updateBrandSales,
+  brandData,
+} = require("../validators/brand");
 const authenticate = require("../middleware/auth");
 
 const router = new express.Router();
@@ -22,6 +26,11 @@ router.put(
   validate(updateBrandSales),
   BrandController.updateBrandSales
 );
-router.post("/getBrandData", authenticate, BrandController.brandData);
+router.post(
+  "/getBrandData",
+  authenticate,
+  validate(brandData),
+  BrandController.brandData
+);
 
 module.exports = router;

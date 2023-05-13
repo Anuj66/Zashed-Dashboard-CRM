@@ -13,6 +13,8 @@ const sendMail = require("../helper/sendMail");
 const UserModel = DB.User;
 const UserRoleModel = DB.UserRole;
 const RoleModel = DB.Role;
+const UserBrandModel = DB.UserBrand;
+const BrandModel = DB.Brand;
 
 const createUser = async (req, res) => {
   try {
@@ -74,6 +76,12 @@ const login = async (req, res) => {
           include: {
             model: RoleModel,
             attributes: ["name"],
+          },
+        },
+        {
+          model: UserBrandModel,
+          include: {
+            model: BrandModel,
           },
         },
       ],

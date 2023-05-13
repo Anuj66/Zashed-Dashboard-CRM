@@ -1,12 +1,12 @@
 const { Op } = require("sequelize");
 const { error, success } = require("../helper/baseResponse");
 const { ADMIN_ROLE_ID, UPLOAD_BASE_PATH } = require("../helper/constants");
-const { moveFile } = require("../helper/fileSystem");
 const { readExcelFile } = require("../helper/readFile");
 const { userHasRole } = require("../helper/userHasRole");
 const DB = require("../models");
 const { totalRevenue } = require("./sales");
 const { groupBy } = require("../helper/commonMethod");
+
 const BrandModel = DB.Brand;
 const UserBrandModel = DB.UserBrand;
 const SalesModel = DB.Sale;
@@ -168,19 +168,29 @@ const getSalesData = (key, val) => {
 const brandData = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    const { brand_ids, start_date, end_date } = req.body;
+    let brandFilter = {};
+    if (brand_ids != null && brand_ids.length > 0) {
+      brandFilter.brand_id = {
+        [Op.in]: brand_ids,
+      };
+    }
 
     let userBrands = {};
     let brandList = [];
     if (isAdmin) {
       userBrands = await UserBrandModel.findAll({
+        where: brandFilter,
         include: {
           model: BrandModel,
         },
       });
     } else {
+      brandFilter.user_id = req.user.id;
       userBrands = await UserBrandModel.findAll({
-        where: {
-          user_id: req.user.id,
+        where: brandFilter,
+        include: {
+          model: BrandModel,
         },
       });
     }
@@ -188,25 +198,35 @@ const brandData = async (req, res) => {
     for (let data of userBrands) {
       brandList.push(data.brand_id);
     }
-
-    const { brand_ids } = req.body;
-    let filter = {};
-
-    if (brand_ids != null && brand_ids.length > 0) {
-      if (isAdmin) {
-        brandList = brand_ids;
-      } else {
-        for (let brandId of brand_ids) {
-          if (!brandList.includes(brandId)) {
-            return res
-              .status(404)
-              .json(error("User not authorized to access others brands"));
-          }
-        }
-        brandList = brand_ids;
+    for (let brandId of brand_ids) {
+      if (!brandList.includes(brandId)) {
+        return res
+          .status(404)
+          .json(error("User not authorized to access others brands"));
       }
-      filter.brand_id = {
-        [Op.in]: brandList,
+    }
+
+    const filter = {};
+
+    if (start_date != null && start_date != "") {
+      filter.order_date = {
+        [Op.gte]: new Date(start_date),
+      };
+    }
+    if (end_date != null && end_date != "") {
+      filter.order_date = {
+        [Op.lte]: new Date(end_date),
+      };
+    }
+    if (
+      start_date != null &&
+      start_date != "" &&
+      end_date != null &&
+      end_date != ""
+    ) {
+      filter.order_date = {
+        [Op.gte]: new Date(start_date),
+        [Op.lte]: new Date(end_date),
       };
     }
 
@@ -424,31 +444,6 @@ const brandData = async (req, res) => {
       totalQty,
       totalRevenue,
     };
-    // Total Sales
-
-    // Total Return
-
-    // Total Revenue
-
-    // Total Sales Qty
-
-    // Return Percentage
-
-    // MOM
-
-    // Highest Discount Range
-
-    // ASP Range
-
-    // Portal Wise Data
-
-    // Article Wise Data
-
-    // Main Category Wise Data
-
-    // Sales for Zash
-
-    // Target Achieved
 
     return res.status(200).json(success("OK", response, 200));
   } catch (err) {
