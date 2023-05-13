@@ -228,6 +228,21 @@ const brandData = async (req, res) => {
       let brandAOV = 0;
       let returnPercentage = 0;
       let brandSaleData = [];
+      let highestDiscountRangeData = {
+        ">70": 0,
+        ">60 & <=70": 0,
+        ">50 & <=60": 0,
+        ">35 & <=50": 0,
+        ">20 & <=35": 0,
+        "<=20": 0,
+      };
+      let ASP = {
+        ">1000": 0,
+        ">800 & <=1000": 0,
+        ">600 & <=800": 0,
+        ">400 & <=600": 0,
+        "<=400": 0,
+      };
       for (let sale of salesData) {
         if (brand.brand_id === sale.brand_id) {
           if (sale.status === "Sales") {
@@ -241,6 +256,28 @@ const brandData = async (req, res) => {
             totalBrandReturnQty += sale.sale_qty;
           }
           brandSaleData.push(sale);
+
+          if (sale.discount_percentage > 70)
+            highestDiscountRangeData[">70"] += 1;
+          if (sale.discount_percentage > 60 && sale.discount_percentage <= 70)
+            highestDiscountRangeData[">60 & <=70"] += 1;
+          if (sale.discount_percentage > 50 && sale.discount_percentage <= 60)
+            highestDiscountRangeData[">50 & <=60"] += 1;
+          if (sale.discount_percentage > 35 && sale.discount_percentage <= 50)
+            highestDiscountRangeData[">35 & <=50"] += 1;
+          if (sale.discount_percentage > 20 && sale.discount_percentage <= 35)
+            highestDiscountRangeData[">20 & <=35"] += 1;
+          if (sale.discount_percentage <= 20)
+            highestDiscountRangeData["<=20"] += 1;
+
+          if (sale.sale_price > 1000) ASP[">1000"] += 1;
+          if (sale.sale_price > 800 && sale.sale_price <= 1000)
+            ASP[">800 & <=1000"] += 1;
+          if (sale.sale_price > 600 && sale.sale_price <= 800)
+            ASP[">600 & <=800"] += 1;
+          if (sale.sale_price > 400 && sale.sale_price <= 600)
+            ASP[">400 & <=600"] += 1;
+          if (sale.sale_price <= 400) ASP["<=400"] += 1;
         }
       }
       if (totalBrandSalesQty != 0) {
@@ -262,6 +299,8 @@ const brandData = async (req, res) => {
         totalBrandReturnQty: Math.abs(totalBrandReturnQty),
         brandAOV,
         returnPercentage,
+        highestDiscountRangeData,
+        ASP,
         totalBrandRevenue:
           parseInt(totalBrandSales) - parseInt(totalBrandReturn),
         brandSaleData,
@@ -321,6 +360,7 @@ const brandData = async (req, res) => {
             totalReturn: 0,
             totalSalesQty: 0,
             totalReturnQty: 0,
+            MOM: 0,
           });
         }
         Object.keys(monthlyRevenueKeyValueData).forEach(function (key) {
@@ -328,6 +368,7 @@ const brandData = async (req, res) => {
           let totalMonthlyReturn = 0;
           let totalMonthlySalesQty = 0;
           let totalMonthlyReturnQty = 0;
+          let MOM = 0;
           for (let sale of monthlyRevenueKeyValueData[key]) {
             if (sale.status === "Sales") {
               totalMonthlySales += sale.sale_price * sale.sale_qty;
@@ -339,12 +380,25 @@ const brandData = async (req, res) => {
               totalMonthlyReturnQty += sale.sale_qty;
             }
           }
+
+          if (key > 1) {
+            if (monthlyRevenueData[key - 2].totalSalesQty != 0) {
+              MOM = parseFloat(
+                (totalMonthlySalesQty * 100) /
+                  monthlyRevenueData[key - 2].totalSalesQty
+              ).toFixed(2);
+            } else {
+              MOM = parseFloat(totalMonthlySalesQty);
+            }
+          }
+
           monthlyRevenueData[key - 1] = {
             month: parseInt(key),
             totalSales: totalMonthlySales,
             totalReturn: totalMonthlyReturn,
             totalSalesQty: totalMonthlySalesQty,
             totalReturnQty: Math.abs(totalMonthlyReturnQty),
+            MOM,
           };
           totalYearlySales += totalMonthlySales;
           totalYearlyReturn += totalMonthlyReturn;
