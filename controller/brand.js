@@ -255,6 +255,7 @@ const brandData = async (req, res) => {
       totalCommission += totalBrandCommission;
       let bd = {
         brand_id: brand.brand_id,
+        brand_name: brand.Brand.name,
         totalBrandSales,
         totalBrandSalesQty,
         totalBrandReturn,
@@ -300,6 +301,66 @@ const brandData = async (req, res) => {
         data.brandSaleData,
         "main_category"
       );
+
+      let yearlyRevenueKeyValueData = groupBy(data.brandSaleData, "year");
+      let yearlyRevenueData = [];
+      Object.keys(yearlyRevenueKeyValueData).forEach(function (key) {
+        let totalYearlySales = 0;
+        let totalYearlyReturn = 0;
+        let totalYearlySalesQty = 0;
+        let totalYearlyReturnQty = 0;
+        let monthlyRevenueKeyValueData = groupBy(
+          yearlyRevenueKeyValueData[key],
+          "month"
+        );
+        let monthlyRevenueData = [];
+        for (let i = 1; i <= 12; i++) {
+          monthlyRevenueData.push({
+            month: i,
+            totalSales: 0,
+            totalReturn: 0,
+            totalSalesQty: 0,
+            totalReturnQty: 0,
+          });
+        }
+        Object.keys(monthlyRevenueKeyValueData).forEach(function (key) {
+          let totalMonthlySales = 0;
+          let totalMonthlyReturn = 0;
+          let totalMonthlySalesQty = 0;
+          let totalMonthlyReturnQty = 0;
+          for (let sale of monthlyRevenueKeyValueData[key]) {
+            if (sale.status === "Sales") {
+              totalMonthlySales += sale.sale_price * sale.sale_qty;
+              totalMonthlySalesQty += sale.sale_qty;
+            }
+
+            if (sale.status === "Return" || sale.status === "RTO") {
+              totalMonthlyReturn += sale.sale_price * sale.sale_qty;
+              totalMonthlyReturnQty += sale.sale_qty;
+            }
+          }
+          monthlyRevenueData[key - 1] = {
+            month: parseInt(key),
+            totalSales: totalMonthlySales,
+            totalReturn: totalMonthlyReturn,
+            totalSalesQty: totalMonthlySalesQty,
+            totalReturnQty: Math.abs(totalMonthlyReturnQty),
+          };
+          totalYearlySales += totalMonthlySales;
+          totalYearlyReturn += totalMonthlyReturn;
+          totalYearlySalesQty += totalMonthlySalesQty;
+          totalYearlyReturnQty += totalMonthlyReturnQty;
+        });
+        yearlyRevenueData.push({
+          year: key,
+          monthlyRevenueData,
+          totalYearlySales,
+          totalYearlyReturn,
+          totalYearlySalesQty,
+          totalYearlyReturnQty: Math.abs(totalYearlyReturnQty),
+        });
+      });
+      data.yearlyRevenueData = yearlyRevenueData;
     }
 
     let response = {
