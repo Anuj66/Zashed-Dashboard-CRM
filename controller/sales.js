@@ -6,6 +6,7 @@ const DB = require("../models");
 const SalesModel = DB.Sale;
 const BrandModel = DB.Brand;
 const UserBrandModel = DB.UserBrand;
+const { groupBy } = require("../helper/commonMethod");
 
 const totalRevenue = async (req, res) => {
   try {
@@ -436,13 +437,6 @@ const salesQuantityByBrand = async (req, res) => {
   } catch (err) {
     return res.status(500).json(error(err.message, 500));
   }
-};
-
-var groupBy = function (xs, key) {
-  return xs.reduce(function (rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
-    return rv;
-  }, {});
 };
 
 module.exports = {

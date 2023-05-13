@@ -22,5 +22,6 @@ router.put(
   validate(updateBrandSales),
   BrandController.updateBrandSales
 );
+router.post("/getBrandData", authenticate, BrandController.brandData);
 
 module.exports = router;
