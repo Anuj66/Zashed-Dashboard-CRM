@@ -121,9 +121,20 @@ const resetPassword = [
     .withMessage("Please enter a valid confirm password"),
 ];
 
+const acceptTermsAndCondition = [
+  body("terms_n_conditions")
+    .notEmpty()
+    .withMessage("Please provide terms and condition status")
+    .isBoolean()
+    .withMessage(
+      "Please provide a boolean value for terms and conditions field"
+    ),
+];
+
 module.exports = {
   createUser,
   login,
   generateOtpForPasswordReset,
   resetPassword,
+  acceptTermsAndCondition,
 };

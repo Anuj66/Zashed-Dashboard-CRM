@@ -32,6 +32,7 @@ const createUser = async (req, res) => {
       username,
       password: securedPassword,
       email,
+      terms_n_conditions: false,
     });
 
     const roleAssigned = await UserRoleModel.create({
@@ -191,10 +192,30 @@ const listUser = async (req, res) => {
   }
 };
 
+const acceptTermsAndCondition = async (req, res) => {
+  try {
+    const { terms_n_conditions } = req.body;
+    const user = await UserModel.update(
+      {
+        terms_n_conditions,
+      },
+      {
+        where: {
+          id: req.user.id,
+        },
+      }
+    );
+    return res.status(201).json(success("UPDATED", user, 201));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   createUser,
   login,
   generateOtpForPasswordReset,
   resetPassword,
   listUser,
+  acceptTermsAndCondition,
 };

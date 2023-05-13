@@ -7,6 +7,7 @@ const {
   login,
   generateOtpForPasswordReset,
   resetPassword,
+  acceptTermsAndCondition,
 } = require("../validators/user");
 
 const router = new express.Router();
@@ -29,5 +30,11 @@ router.post(
   UserController.resetPassword
 );
 router.get("/getClients", authenticate, UserController.listUser);
+router.put(
+  "/acceptTNC",
+  authenticate,
+  validate(acceptTermsAndCondition),
+  UserController.acceptTermsAndCondition
+);
 
 module.exports = router;
