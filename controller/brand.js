@@ -198,11 +198,13 @@ const brandData = async (req, res) => {
     for (let data of userBrands) {
       brandList.push(data.brand_id);
     }
-    for (let brandId of brand_ids) {
-      if (!brandList.includes(brandId)) {
-        return res
-          .status(404)
-          .json(error("User not authorized to access others brands"));
+    if (brand_ids != null && brand_ids > 0 && !isAdmin) {
+      for (let brandId of brand_ids) {
+        if (!brandList.includes(brandId)) {
+          return res
+            .status(404)
+            .json(error("User not authorized to access others brands"));
+        }
       }
     }
 
