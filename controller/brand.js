@@ -86,15 +86,21 @@ const pushExcelDataToDb = async (file, brand_id) => {
 const jsonToDbData = (data, brand_id) => {
   const result = [];
   for (let row of data) {
+    let isDataValid = true;
     let temp = {
       brand_id,
     };
     Object.keys(row).forEach(function (key) {
       let val = row[key];
-      const out = getSalesData(key, val);
-      temp[out.key] = out.value;
+      if (val === "#VALUE!") {
+        isDataValid = false;
+      }
+      if (isDataValid) {
+        const out = getSalesData(key, val);
+        temp[out.key] = out.value;
+      }
     });
-    result.push(temp);
+    if (isDataValid) result.push(temp);
   }
   return result;
 };
