@@ -13,4 +13,6 @@ router.post(
   TicketController.createTicket
 );
 
+router.get("/getTickets", authenticate, TicketController.listTickets);
+
 module.exports = router;

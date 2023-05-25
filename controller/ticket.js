@@ -1,4 +1,6 @@
 const { error, success } = require("../helper/baseResponse");
+const { ADMIN_ROLE_ID } = require("../helper/constants");
+const { userHasRole } = require("../helper/userHasRole");
 const DB = require("../models");
 const UserModel = DB.User;
 const TicketModel = DB.Ticket;
@@ -27,6 +29,27 @@ const createTicket = async (req, res) => {
   }
 };
 
+const listTickets = async (req, res) => {
+  try {
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    const filter = {};
+    if (!isAdmin) {
+      filter.user_id = req.user.id;
+    }
+    const tickets = await TicketModel.findAll({
+      where: filter,
+      include: {
+        model: UserModel,
+        attributes: ["username", "email"],
+      },
+    });
+    return res.status(200).json(success("OK", tickets, 200));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   createTicket,
+  listTickets,
 };
