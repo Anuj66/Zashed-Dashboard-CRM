@@ -1,6 +1,10 @@
 const { Op } = require("sequelize");
 const { error, success } = require("../helper/baseResponse");
-const { ADMIN_ROLE_ID, UPLOAD_BASE_PATH } = require("../helper/constants");
+const {
+  ADMIN_ROLE_ID,
+  UPLOAD_BASE_PATH,
+  getMonthName,
+} = require("../helper/constants");
 const { readExcelFile } = require("../helper/readFile");
 const { userHasRole } = require("../helper/userHasRole");
 const DB = require("../models");
@@ -384,6 +388,7 @@ const brandData = async (req, res) => {
         for (let i = 1; i <= 12; i++) {
           monthlyRevenueData.push({
             month: i,
+            monthName: getMonthName(i),
             totalSales: 0,
             totalReturn: 0,
             totalSalesQty: 0,
@@ -422,6 +427,7 @@ const brandData = async (req, res) => {
 
           monthlyRevenueData[key - 1] = {
             month: parseInt(key),
+            monthName: getMonthName(parseInt(key)),
             totalSales: totalMonthlySales,
             totalReturn: totalMonthlyReturn,
             totalSalesQty: totalMonthlySalesQty,
