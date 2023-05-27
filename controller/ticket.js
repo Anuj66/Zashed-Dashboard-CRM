@@ -49,7 +49,34 @@ const listTickets = async (req, res) => {
   }
 };
 
+const updateTicket = async (req, res) => {
+  try {
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+    if (!isAdmin) {
+      return res.status(403).json(error("Unauthorized access", 403));
+    }
+
+    const { ticketId, feedback } = req.body;
+    let ticket = await TicketModel.findOne({
+      where: {
+        id: ticketId,
+      },
+    });
+
+    ticket.set({
+      status: "Resolved",
+      feedback,
+    });
+
+    ticket = await ticket.save();
+    return res.status(201).json(success("UPDATED", ticket, 201));
+  } catch (err) {
+    return res.status(500).json(error(err.message, 500));
+  }
+};
+
 module.exports = {
   createTicket,
   listTickets,
+  updateTicket,
 };

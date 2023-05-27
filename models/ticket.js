@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      this.belongsTo(models.User, { foreignKey: "user_id" })
+      this.belongsTo(models.User, { foreignKey: "user_id" });
     }
   }
   Ticket.init(
@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       subject: DataTypes.STRING,
       message: DataTypes.STRING,
       status: DataTypes.ENUM("Resolved", "Pending"),
+      feedback: DataTypes.STRING,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
@@ -26,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "Ticket",
       tableName: "Tickets",
-      timestamps: true
+      timestamps: true,
     }
   );
   return Ticket;
