@@ -2,18 +2,35 @@ const { body, param } = require("express-validator");
 const DB = require("../models");
 
 const TicketModel = DB.Ticket;
+const UserModel = DB.User;
 
 const createTicket = [
   body("subject")
-    .notEmpty()
-    .withMessage("Please provide a ticket subject")
+    .optional()
     .isString()
     .withMessage("Please provide a valid subject"),
   body("message")
-    .notEmpty()
-    .withMessage("Please provide a ticket message")
+    .optional()
     .isString()
     .withMessage("Please provide a valid message"),
+  body("adminMessage")
+    .optional()
+    .isString()
+    .withMessage("Please provide a valid message"),
+  body("userId")
+    .optional()
+    .custom((value) => {
+      return UserModel.findOne({
+        where: {
+          id: value,
+        },
+      }).then((user) => {
+        if (!user) {
+          return Promise.reject("User does not exists!");
+        }
+        return true;
+      });
+    }),
 ];
 
 const updateTicket = [
@@ -33,10 +50,13 @@ const updateTicket = [
       });
     }),
   body("feedback")
-    .notEmpty()
-    .withMessage("Please provide a feedback")
+    .optional()
     .isString()
     .withMessage("Please provide a valid feedback"),
+  body("message")
+    .optional()
+    .isString()
+    .withMessage("Please provide a valid message"),
 ];
 
 module.exports = {

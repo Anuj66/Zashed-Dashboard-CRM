@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       subject: DataTypes.STRING,
       message: DataTypes.STRING,
       status: DataTypes.ENUM("Resolved", "Pending"),
+      admin_message: DataTypes.STRING,
       feedback: DataTypes.STRING,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,

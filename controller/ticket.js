@@ -7,14 +7,32 @@ const TicketModel = DB.Ticket;
 
 const createTicket = async (req, res) => {
   try {
-    const { subject, message } = req.body;
+    const { subject, message, adminMessage, userId } = req.body;
 
-    let ticketRaised = await TicketModel.create({
-      user_id: req.user.id,
-      subject,
-      message,
-      status: "Pending",
-    });
+    const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
+
+    let ticketRaised = {};
+    if (isAdmin) {
+      if (!adminMessage)
+        return res.status(400).json(error("Admin Message not provided", 400));
+      if (!userId)
+        return res.status(400).json(error("User Id not provided", 400));
+      ticketRaised = await TicketModel.create({
+        user_id: userId,
+        admin_message: adminMessage,
+      });
+    } else {
+      if (!subject)
+        return res.status(400).json(error("Subject not provided", 400));
+      if (!message)
+        return res.status(400).json(error("Message not provided", 400));
+      ticketRaised = await TicketModel.create({
+        user_id: req.user.id,
+        subject,
+        message,
+        status: "Pending",
+      });
+    }
 
     let ticketNumber = "Zashed" + String(ticketRaised.id).padStart(10, "0");
     ticketRaised.set({
@@ -52,21 +70,27 @@ const listTickets = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const isAdmin = await userHasRole(req.user.id, ADMIN_ROLE_ID);
-    if (!isAdmin) {
-      return res.status(403).json(error("Unauthorized access", 403));
-    }
 
-    const { ticketId, feedback } = req.body;
+    const { ticketId, feedback, message } = req.body;
     let ticket = await TicketModel.findOne({
       where: {
         id: ticketId,
       },
     });
 
-    ticket.set({
-      status: "Resolved",
-      feedback,
-    });
+    if (!isAdmin) {
+      if (!message) return res.status(400).json(error("Message not provided"));
+      ticket.set({
+        message,
+      });
+    } else {
+      if (!feedback)
+        return res.status(400).json(error("Feedback not provided"));
+      ticket.set({
+        status: "Resolved",
+        feedback,
+      });
+    }
 
     ticket = await ticket.save();
     return res.status(201).json(success("UPDATED", ticket, 201));
