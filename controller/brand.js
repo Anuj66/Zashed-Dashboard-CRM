@@ -373,6 +373,8 @@ const brandData = async (req, res) => {
         "main_category"
       );
 
+      data.sizeWiseData = salesReturnDataAsPerField(data.brandSaleData, "size");
+
       let yearlyRevenueKeyValueData = groupBy(data.brandSaleData, "year");
       let yearlyRevenueData = [];
       Object.keys(yearlyRevenueKeyValueData).forEach(function (key) {
@@ -393,6 +395,7 @@ const brandData = async (req, res) => {
             totalReturn: 0,
             totalSalesQty: 0,
             totalReturnQty: 0,
+            totalMonthlyRevenue: 0,
             MOM: 0,
           });
         }
@@ -432,6 +435,7 @@ const brandData = async (req, res) => {
             totalReturn: totalMonthlyReturn,
             totalSalesQty: totalMonthlySalesQty,
             totalReturnQty: Math.abs(totalMonthlyReturnQty),
+            totalMonthlyRevenue: totalMonthlySales - totalMonthlyReturn,
             MOM,
           };
           totalYearlySales += totalMonthlySales;
